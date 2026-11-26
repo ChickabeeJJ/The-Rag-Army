@@ -268,6 +268,7 @@ export const currentBanner = () => BANNERS[weekNumber() % BANNERS.length];
 const GACHA_POOL = r => RAG_IDS.filter(id => RAGS[id].rarity === r && !(r === 'special'));
 export function draw(n, pay) {
   // pay: 'buttons' | 'ticket' | 'plat' | 'ntix'
+  if (!(n >= 1)) return null;
   if (pay === 'buttons') { const c = n === 11 ? DRAW11_COST : DRAW_COST * n; if (S.buttons < c) return null; S.buttons -= c; }
   else if (pay === 'ticket') { if (S.ticket < n) return null; S.ticket -= n; }
   else if (pay === 'plat') { if (S.plat < 1) return null; S.plat--; n = 1; }

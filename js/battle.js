@@ -18,6 +18,7 @@ export class Battle {
     this.B = o.B || {};
     this.rng = RNG(o.seed || ((Math.random() * 1e9) | 0));
     this.t = 0; this.L = stage.len;
+    this.timeLimit = stage.timeLimit || (stage.rules && stage.rules.timeLimit) || 0;
     this.cm = stage.costMult || 1;
     this.loom = o.items && o.items.sack ? LOOM_MAX : 1;
     this.money = Math.min(loomCap(this.loom, this.B), 75 + (this.B.startScrap || 0));
@@ -104,7 +105,7 @@ export class Battle {
     for (const s of this.shots) s.t += dt;
     this.shots = this.shots.filter(s => s.t < s.life);
     this.units = this.units.filter(u => !(u.state === 'gone'));
-    if (this.stage.timeLimit && this.t >= this.stage.timeLimit) this.result = this.stage.immuneBase ? 'done' : 'lose';
+    if (this.timeLimit && this.t >= this.timeLimit) this.result = this.stage.immuneBase ? 'done' : 'lose';
     if (this.eBase.hp <= 0 && !this.eBase.immune) { this.result = 'win'; this.ev('win', this.eBase.x, 0); }
     if (this.pBase.hp <= 0) { this.result = 'lose'; this.ev('lose', this.pBase.x, 0); }
   }
@@ -429,7 +430,7 @@ export class Battle {
     this.autoT = 0.35;
     const near = this.foeNear(this.L * 0.6), threat = this.foeNear(this.cannon.reach * 0.8);
     if (this.cannon.charge >= 1 && (threat >= 3 || this.foeNear(500) >= 1)) this.fire();
-    const cap = loomCap(this.loom, this.B), danger = this.foeNear(700) > 0, lc = loomCost(this.loom, this.cm);
+    const cap = loomCap(this.loom, this.B), danger = this.foeNear(450) > 0, lc = loomCost(this.loom, this.cm);
     // grow the loom early, like a sensible player; only hold off while the keep is in danger
     if (this.loom < LOOM_MAX && this.money >= lc && (this.loom < 4 || !danger || this.money > cap * 0.8)) { this.loomUp(); return; }
     const saving = this.loom < 6 && this.money < lc && !danger;
@@ -438,9 +439,14 @@ export class Battle {
     if (!order.length) return;
     const wallMax = 200 * this.cm;
     const walls = order.filter(o => o.sl.s.cost <= wallMax).sort((a, b) => a.sl.s.cost - b.sl.s.cost);
-    if (near && walls.length && (!saving || this.foeNear(1100))) this.deploy(walls[0].i);
+    let wallsUp = 0; for (const u of this.units) if (u.side === 0 && this.alive(u) && !u.wall && u.s.cost <= wallMax) wallsUp++;
+    // the hitter worth saving for: the priciest one the wallet can hold that is (nearly) recharged
+    const want = this.slots.map((sl, i) => ({ sl, i })).filter(o => o.sl.s.cost > wallMax && o.sl.s.cost <= cap && o.sl.cd < 2).sort((a, b) => b.sl.s.cost - a.sl.s.cost)[0];
+    if (want && want.sl.cd <= 0 && this.money >= want.sl.s.cost && !saving) { this.deploy(want.i); return; }
+    const hold = want && wallsUp >= 3 && !this.foeNear(900);
+    if (near && walls.length && (danger || wallsUp < 3 || (!hold && !saving))) this.deploy(walls[0].i);
     const big = order.filter(o => o.sl.s.cost > wallMax).sort((a, b) => b.sl.s.cost - a.sl.s.cost);
-    if (big.length && !saving && (near || this.money > cap * 0.7)) this.deploy(big[0].i);
+    if (!want && big.length && !saving && (near || this.money > cap * 0.7)) this.deploy(big[0].i);
   }
   rivalAI(dt) {
     const R = this.rival;

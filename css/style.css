@@ -132,7 +132,7 @@ kbd { display: inline-block; font-family: var(--font); font-weight: 800; font-si
 .foe canvas, .foe img { width: 64px; height: 64px; background: var(--ink-2); clip-path: var(--cut-s); display: block; margin-bottom: 3px; }
 .trait { display: inline-block; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 3px; color: #0c0e15; letter-spacing: .04em; }
 .rew { display: flex; flex-wrap: wrap; gap: 6px; }
-.rew span { display: inline-flex; align-items: center; gap: 5px; background: var(--ink-2); padding: 4px 9px; clip-path: var(--cut-s); font-size: 12px; font-weight: 800; }
+.rew > span { display: inline-flex; align-items: center; gap: 5px; background: var(--ink-2); padding: 4px 9px; clip-path: var(--cut-s); font-size: 12px; font-weight: 800; }
 .crowns { display: flex; gap: 6px; }
 .crowns .btn.on { background: var(--gold); color: #2a1c00; }
 
@@ -229,14 +229,14 @@ kbd { display: inline-block; font-family: var(--font); font-weight: 800; font-si
 .dslot .cd { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(6,8,12,.72); pointer-events: none; }
 .dslot.poor { filter: grayscale(.8) brightness(.7); }
 .dslot.ready { box-shadow: inset 0 0 0 2px rgba(var(--acc-rgb), .55); }
-.dslot.emptyslot { opacity: .25; }
+.dslot.emptyslot { opacity: .35; background: rgba(13,15,23,.5); pointer-events: none; }
 .items-on { display: flex; gap: 4px; }
 .items-on span { font-size: 10px; background: var(--panel); padding: 3px 6px; clip-path: var(--cut-s); font-weight: 800; color: var(--acc); }
 .banner-msg { position: fixed; left: 50%; top: 28%; transform: translateX(-50%); z-index: 6; font-weight: 900; font-size: clamp(30px, 6vw, 64px); letter-spacing: .04em; text-shadow: 0 4px 0 rgba(0,0,0,.4); white-space: nowrap; animation: bannerIn 2.2s ease forwards; pointer-events: none; text-transform: uppercase; }
-.tut { position: fixed; z-index: 7; left: 50%; transform: translateX(-50%); bottom: calc(190px + var(--safe-b)); background: var(--ink); clip-path: var(--cut-m); padding: 12px 18px; font-weight: 800; font-size: 15px; max-width: 90vw; text-align: center; box-shadow: inset 4px 0 0 var(--acc); animation: pop .25s; pointer-events: none; }
+.tut { position: fixed; z-index: 7; left: 50%; transform: translateX(-50%); top: calc(88px + var(--safe-t)); background: var(--ink); clip-path: var(--cut-m); padding: 12px 18px; font-weight: 800; font-size: 15px; max-width: 90vw; text-align: center; box-shadow: inset 4px 0 0 var(--acc); animation: pop .25s; pointer-events: none; }
 .tut b { color: var(--acc); }
 .hl { animation: glowPulse 1s infinite !important; outline: 3px solid var(--acc); outline-offset: -3px; }
-@media (max-height: 560px) { .dslot { height: 50px; } .dslot canvas, .dslot img { width: 46px; height: 46px; } .bigbtn { width: 76px; height: 76px; } .bigbtn .ic { width: 24px; height: 24px; } .tut { bottom: calc(150px + var(--safe-b)); } }
+@media (max-height: 560px) { .dslot { height: 50px; } .dslot canvas, .dslot img { width: 46px; height: 46px; } .bigbtn { width: 76px; height: 76px; } .bigbtn .ic { width: 24px; height: 24px; } .tut { top: calc(70px + var(--safe-t)); } }
 @media (max-width: 700px) { .deploy { gap: 4px; } .hpbars { width: 42vw; } .wallet { font-size: 15px; } }
 
 /* upright phones */

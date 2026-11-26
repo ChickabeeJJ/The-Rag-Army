@@ -69,12 +69,14 @@ export function finish(stage, b, ctx) {
   const { items, B, o } = ctx;
   const win = b.result === 'win', done = b.result === 'done';
   const sum = { win, done, thread: 0, got: [], first: null, treasure: null, unlocked: [], score: 0, badges: [], newRank: null };
-  track('kills', b.stats.kills); S.stats.bosses += b.stats.bossKills;
-  for (const m of ['w_boss']) S.missions.prog[m] = (S.missions.prog[m] || 0) + b.stats.bossKills;
-  track('cannons', 0); track('deploys', 0);
+  // settle only what happened since the last settle (a continued battle settles twice)
+  const prev = b.settled || {}, d = k => (b.stats[k] || 0) - (prev[k] || 0);
+  track('kills', d('kills')); track('deploys', d('deploys')); track('cannons', d('cannons'));
+  S.stats.bosses += d('bossKills'); S.missions.prog.w_boss = (S.missions.prog.w_boss || 0) + d('bossKills');
+  b.settled = { ...b.stats };
   if (stage.mode === 'event') track('events');
   if (done && stage.mode === 'yard') {
-    sum.score = Math.round(b.stats.baseDmg + b.stats.kills * 100);
+    sum.score = Math.round(b.stats.baseDmg + b.stats.dmg + b.stats.kills * 100);
     const wk = weekNumber();
     if (S.yardWeek !== wk) { S.yardWeek = wk; S.yardWeekBest = 0; S.yardClaimed = []; }
     S.yardWeekBest = Math.max(S.yardWeekBest, sum.score); S.yardBest = Math.max(S.yardBest, sum.score);

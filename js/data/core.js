@@ -85,4 +85,4 @@ export const ARCH = {
 // level growth: +20% per level to 30, then +10% per level (plus levels stack on top of the level)
 export const levelMult = L => 1 + 0.2 * (Math.min(L, 30) - 1) + 0.1 * Math.max(0, L - 30);
 // thread cost to go from level L to L+1
-export const levelCost = (L, rar) => Math.round((200 + 180 * L + 22 * L * L) * RARITY[rar].lvlCost / 10) * 10;
+export const levelCost = (L, rar) => Math.round((100 + 60 * L + 12 * L * L) * RARITY[rar].lvlCost / 10) * 10;

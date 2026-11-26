@@ -1,11 +1,12 @@
 // Stage generation for every mode. Stages are deterministic: the same key always builds the same stage.
 import { RNG, hashStr } from '../util.js';
 import { ENEMIES, pool } from './enemies.js';
+import { RAGS } from './rags.js';
 
 export const ARCS = [
   { id: 'seam', n: 'The Long Seam', theme: 0, mult: 1, traits: ['crimson', 'drifting', 'shadow', 'steel', 'gilded'] },
-  { id: 'fray', n: 'The Fraying Lands', theme: 1, mult: 3.2, traits: ['starborn', 'crimson', 'drifting', 'shadow', 'steel', 'gilded'] },
-  { id: 'void', n: 'The Unspun Void', theme: 2, mult: 7, traits: ['revenant', 'void', 'ancient', 'starborn', 'shadow', 'steel'] },
+  { id: 'fray', n: 'The Fraying Lands', theme: 1, mult: 7, ramp: 0.8, ch: [1, 1.25, 1.55], traits: ['starborn', 'crimson', 'drifting', 'shadow', 'steel', 'gilded'] },
+  { id: 'void', n: 'The Unspun Void', theme: 2, mult: 9, ramp: 1, ch: [1, 1.3, 1.6], traits: ['revenant', 'void', 'ancient', 'starborn', 'shadow', 'steel'] },
 ];
 export const CH_MULT = [1, 1.6, 2.1];
 const CH_NAMES = ['Chapter 1', 'Chapter 2', 'Chapter 3'];
@@ -72,22 +73,22 @@ const FINALE = [['spoolgolem', 'greatmoth', 'unraveller'], ['stareater', 'giltmo
 
 /* ---------------------------------------------------------------- story */
 export function storyStage(arc, ch, i) {
-  const a = ARCS[arc], lvl = i / 47, m = a.mult * CH_MULT[ch];
+  const a = ARCS[arc], lvl = i / 47, m = a.mult * (a.ch || CH_MULT)[ch];
   const key = `s${arc}-${ch}-${i}`;
-  const mag = 100 * m * (1.4 + 3 * lvl);
+  const mag = (arc + ch === 0 ? 100 : 140) * m * (a.ramp ? 1 + a.ramp * lvl : 1.4 + 3 * lvl);
   const traits = ch === 0 ? trailOf(a.traits, lvl) : ['plain', ...a.traits];
   const maxTier = Math.min(6, 1 + Math.floor(lvl * 2.6) + (ch > 0 ? 1 : 0) + arc), heavyTier = Math.min(6, maxTier + 1);
   const isBoss = i % 12 === 11 && i !== 47;
   let spawns;
   if (arc === 0 && ch === 0 && i < 3) spawns = tutorialSpawns(i);
-  else spawns = compose(key, { lvl, mag: i === 47 ? mag * 0.6 : mag, traits, maxTier, boss: isBoss ? BOSS_BY_ARC[arc][(i / 12 | 0) + ch * 2] || BOSS_BY_ARC[arc][0] : null, bossMag: mag * (arc === 0 && ch === 0 ? 0.1 + 0.15 * lvl : arc === 0 ? 0.3 : 0.45), finale: i === 47 ? FINALE[arc][ch] : null, finaleMag: mag * (arc === 0 && ch === 0 ? 0.3 : 0.22), extra: ch, heavyTier });
+  else spawns = compose(key, { lvl, mag: i === 47 ? mag * (arc + ch === 0 ? 0.6 : 0.42) : mag, traits, maxTier, boss: isBoss ? BOSS_BY_ARC[arc][(i / 12 | 0) + ch * 2] || BOSS_BY_ARC[arc][0] : null, bossMag: mag * (arc === 0 && ch === 0 ? 0.1 + 0.15 * lvl : arc === 0 ? 0.3 : 0.45), finale: i === 47 ? FINALE[arc][ch] : null, finaleMag: mag * (arc === 0 && ch === 0 ? 0.3 : 0.17), extra: ch, heavyTier });
   return {
     key, mode: 'story', arc, ch, i, spawns, name: storyName(arc, i), sub: `${a.n} · ${CH_NAMES[ch]} · Stage ${i + 1}`,
     len: 2500 + 45 * (i % 10) + arc * 150 + (isBoss || i === 47 ? 300 : 0),
     baseHp: Math.round((i < 3 && arc + ch === 0 ? 1200 + i * 600 : (2600 + 380 * i)) * m),
     energy: Math.min(45, 4 + Math.floor(i / 4) + arc * 6 + ch * 2),
     costMult: [1, 1.15, 1.3][ch], theme: a.theme, sky: i % 4,
-    thread: Math.round((120 + 50 * i) * m),
+    thread: Math.round((200 + 90 * i) * m),
     treasure: `${arc}-${ch}-${i}`,
     first: i === 47 ? { ticket: 3, buttons: 100, ...(ch === 2 ? { plat: 1 } : {}) } : isBoss ? { buttons: 30 } : i % 4 === 3 ? { buttons: 5 } : null,
     drops: [{ k: 'mat', ch: 0.35 }],
@@ -110,8 +111,8 @@ const LEG_THEMES = [
   ['Ashen Hem', ['crimson', 'revenant']], ['Silent Spool', ['void', 'shadow']], ['The Great Knot', ['ancient', 'void']], ['Last Light', ['starborn', 'void', 'gilded']],
 ];
 export const SAGAS = [
-  { id: 'tales', n: 'Tales of the Seam', subs: 24, unlock: s => (s.story[0] || 0) >= 48, base: 1.2, step: 0.32 },
-  { id: 'uncanny', n: 'Uncanny Tales', subs: 12, unlock: s => (s.legendSub.tales || 0) >= 24, base: 9, step: 0.9 },
+  { id: 'tales', n: 'Tales of the Seam', subs: 24, unlock: s => (s.story[0] || 0) >= 48, base: 1.4, step: 0.2 },
+  { id: 'uncanny', n: 'Uncanny Tales', subs: 12, unlock: s => (s.legendSub.tales || 0) >= 24, base: 8, step: 0.6 },
 ];
 export const CROWN_MAG = [1, 1.5, 2, 3];
 const LEG_RULES = [null, null, null, null, { rarity: ['basic', 'special', 'rare'] }, null, { maxCost: 1500 }, null, { noCannon: 1 }, null, { maxDeploy: 30 }, { timeLimit: 240 }];
@@ -182,20 +183,21 @@ export function outbreakStage(arcCh, k) {
   const r = RNG(hashStr('ob' + arcCh + k));
   s.spawns = s.spawns.map(e => {
     if (e.boss) return { ...e, e: 'unburied', mag: e.mag * 0.7 };
-    const tier = ENEMIES[e.e].tier, alt = rev.filter(x => Math.abs(x.tier - tier) <= 1);
-    return { ...e, e: (alt.length ? r.pick(alt) : r.pick(rev)).id, mag: e.mag * 1.3 };
+    const o = ENEMIES[e.e], alt = rev.filter(x => Math.abs(x.tier - o.tier) <= 1), n = alt.length ? r.pick(alt) : r.pick(rev);
+    // keep each foe about as tough as the one it replaces, then a little more
+    return { ...e, e: n.id, mag: e.mag * Math.min(1.5, Math.max(0.15, o.hp / n.hp)) * 1.15 };
   });
   return { ...s, key: `o${arcCh}-${k}`, mode: 'outbreak', arcCh, k, name: 'Rot: ' + s.name, sub: `Rot Outbreak · ${ARCS[arc].n} · ${CH_NAMES[ch]}`, treasure: null, first: { buttons: 30, gem: 2 }, energy: s.energy + 5, drops: [{ k: 'gem', ch: 0.2 }] };
 }
 
 /* ---------------------------------------------------------- needle spire */
 export function spireStage(f) {
-  const key = 'sp' + f, lvl = f / 50, mag = 100 * Math.pow(1 + f * 0.32, 1.35);
+  const key = 'sp' + f, lvl = f / 50, mag = 100 * Math.pow(1 + f * 0.22, 1.15);
   const boss = f % 10 === 0 ? ['spoolgolem', 'inkwell', 'giltmother', 'stareater', 'unburied'][f / 10 - 1] : null;
   return {
     key, mode: 'spire', f, name: `Floor ${f}`, sub: 'The Needle Spire', len: 2600 + f * 20, baseHp: Math.round(8000 * mag / 100),
     spawns: compose(key, { lvl, mag, traits: ['plain', 'crimson', 'drifting', 'shadow', 'gilded', 'steel', 'starborn', 'revenant', 'ancient', 'void'].slice(0, 3 + Math.floor(f / 6)), maxTier: Math.min(6, 2 + Math.floor(f / 9)), boss, bossMag: mag * 0.6, extra: 1 }),
-    energy: 15 + Math.floor(f / 2), costMult: 1.5, theme: 1, sky: 2, thread: Math.round(3000 * mag / 100),
+    energy: 15 + Math.floor(f / 2), costMult: 1.25, theme: 1, sky: 2, thread: Math.round(3000 * mag / 100),
     first: f % 10 === 0 ? { buttons: 100, ticket: 1 } : f % 5 === 0 ? { buttons: 30 } : { buttons: 5 }, drops: [{ k: 'mat', ch: 0.6 }], boss: !!boss, music: boss ? 'boss' : 'battle',
   };
 }
@@ -254,11 +256,12 @@ export function trekStage(level) {
 /* ------------------------------------------------------------- rival dojo */
 export function rivalStage(wins, ragIds) {
   const r = RNG(hashStr('rival' + wins));
-  const lineup = Array.from({ length: 6 }, () => r.pick(ragIds));
-  const lv = Math.min(50, 8 + wins * 4);
+  const pool = ragIds.filter(id => wins >= 6 || !['uber', 'legend'].includes(RAGS[id].rarity));
+  const lineup = Array.from({ length: 6 }, () => r.pick(pool));
+  const lv = Math.min(50, 5 + wins * 3);
   return {
     key: 'r' + wins, mode: 'rival', wins, name: `Rival Bout ${wins + 1}`, sub: 'Rival Dojo · a rag army fights back', len: 2800, baseHp: 6000 + wins * 3000,
-    spawns: [], rival: { lineup, lv, form: Math.min(2, Math.floor(wins / 3)) }, energy: 15, costMult: 1, theme: 0, sky: 1,
+    spawns: [], rival: { lineup, lv, form: wins >= 8 ? 2 : wins >= 2 ? 1 : 0 }, energy: 15, costMult: 1, theme: 0, sky: 1,
     thread: 4000 + wins * 1500, first: { buttons: 30 }, drops: [], music: 'boss',
   };
 }

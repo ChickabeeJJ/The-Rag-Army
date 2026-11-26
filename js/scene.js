@@ -25,6 +25,7 @@ export const Scene = {
     this.cam.x = this.cam.tx = -200; this.cam.lastDrag = -10;
     this.tut = stage.key === 's0-0-0' && S.tutorial < 3 ? 1 : 0;
     this.buildHud();
+    if (this.tut) this.tutStep(1);
     music(stage.music || 'battle');
     document.body.classList.add('battle');
   },
@@ -34,9 +35,11 @@ export const Scene = {
   buildHud() {
     const b = this.b, stage = this.ctx.stage;
     const H = {};
-    const slots = Array.from({ length: 10 }, (_, i) => {
+    const nSlots = b.slots.length > 5 ? 10 : 5;
+    const slots = Array.from({ length: nSlots }, (_, i) => {
       const sl = b.slots[i];
       const n = el('button.dslot' + (sl ? '' : '.emptyslot'), { onpointerdown: e => { e.preventDefault(); this.tryDeploy(i); } });
+      if (!sl) n.disabled = true;
       if (sl) {
         const c = ragPortrait(sl.s.look, sl.s.form, 64); const cv = el('canvas', { width: 64, height: 64 }); cv.getContext('2d').drawImage(c, 0, 0);
         n.append(cv, el('span.c', String(sl.s.cost)), el('kbd.k', String((i + 1) % 10)), el('i.cd'));
@@ -84,14 +87,14 @@ export const Scene = {
     const pf = b.pBase.hp / b.pBase.max, ef = b.eBase.immune ? 1 : b.eBase.hp / b.eBase.max;
     H.pB.style.width = pf * 100 + '%'; H.eB.style.width = ef * 100 + '%';
     const bt = `${Math.ceil(b.pBase.hp)}|${Math.ceil(b.eBase.hp)}`;
-    if (force || C.bt !== bt) { H.pBt.textContent = fmt(Math.ceil(b.pBase.hp)); H.eBt.textContent = b.eBase.immune ? 'Score ' + fmt(b.stats.baseDmg) : fmt(Math.ceil(b.eBase.hp)); C.bt = bt; }
-    if (b.stage.timeLimit) H.timer.textContent = `${Math.max(0, Math.ceil(b.stage.timeLimit - b.t))}s left`;
+    if (force || C.bt !== bt) { H.pBt.textContent = fmt(Math.ceil(b.pBase.hp)); H.eBt.textContent = b.eBase.immune ? 'Score ' + fmt(b.stats.baseDmg + b.stats.dmg + b.stats.kills * 100) : fmt(Math.ceil(b.eBase.hp)); C.bt = bt; }
+    if (b.timeLimit) H.timer.textContent = `${Math.max(0, Math.ceil(b.timeLimit - b.t))}s left`;
     else if (b.stage.timed) H.timer.textContent = `${b.t.toFixed(1)}s`;
     if (force || C.sp !== this.speed) { H.speed.querySelector('b').textContent = this.speed + 'x'; C.sp = this.speed; }
   },
   tryDeploy(i) {
     if (!this.b || this.b.result) return;
-    if (this.b.deploy(i)) { S.stats.deploys = S.stats.deploys; if (this.tut === 1) this.tutStep(2); }
+    if (this.b.deploy(i)) { if (this.tut === 1) this.tutStep(2); }
     else sfx('error', 0.15);
   },
   tryLoom() { if (this.b && this.b.loomUp()) { sfx('loom'); if (this.tut === 2) this.tutStep(3); } else sfx('error', 0.15); },
@@ -145,7 +148,7 @@ export const Scene = {
     let hits = 0;
     for (const e of b.events) {
       switch (e.type) {
-        case 'deploy': FX.burst(e.x, e.y - 4, 8, ['#e6dfd2', '#c8ff2e'], 160, 0.4, 3, { g: 300 }); sfx('deploy'); S.stats.deploys++; break;
+        case 'deploy': FX.burst(e.x, e.y - 4, 8, ['#e6dfd2', '#c8ff2e'], 160, 0.4, 3, { g: 300 }); sfx('deploy'); break;
         case 'foe': if (!S.seenFoes[e.id] && !e.rag) S.seenFoes[e.id] = 1; break;
         case 'hit': {
           hits++;
@@ -203,7 +206,6 @@ export const Scene = {
     if (e.id === 'wall') { FX.burst(x0, -200, 20, ['#ece6dc', '#c8ff2e'], 300, 0.8, 5); return; }
     FX.beam(x0, x1, -36, col, 0.6, 34);
     for (let x = x0; x < x1; x += 60) FX.burst(x, -36, 2, [col, '#ffffff'], 240, 0.5, 3, { add: true, g: 120 });
-    S.stats.cannons++;
   },
   banner(txt, col) { const n = el('div.banner-msg', { style: { color: col } }, txt); document.body.append(n); setTimeout(() => n.remove(), 2300); },
   toast(t) { const box = $('#toasts'); if (!box || box.childElementCount > 2) return; const n = el('div.toast', t); box.append(n); setTimeout(() => n.remove(), 1800); },

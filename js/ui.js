@@ -3,7 +3,7 @@ import { el, $, fmt, fmtTime, pct, weekNumber, RNG } from './util.js';
 import { ic } from './icons.js';
 import { S, save, tickEnergy, energyMax, energyNext, refillEnergy, userRank, levelUp, levelCap, capUp, evolve, canEvolve, evolveReq, talentUp, powerUp,
   cannonUnlocked, cannonUp, buySpecial, currentBanner, draw, scavAreas, scavStart, scavCollect, scavXpNeed, scavHelper, claimMission, claimRank,
-  treasureSetInfo, activeCombos, unitStats, battleBonus, loginCheck, resetSave, exportSave, importSave, totalClears, newBadges } from './save.js';
+  treasureSetInfo, activeCombos, unitStats, battleBonus, loginCheck, resetSave, exportSave, importSave, totalClears, newBadges, grant } from './save.js';
 import { RAGS, RAG_IDS } from './data/rags.js';
 import { ENEMIES, ENEMY_IDS } from './data/enemies.js';
 import { RARITY, TRAITS, ABIL, IMMUNE_NAMES, levelCost } from './data/core.js';
@@ -457,8 +457,8 @@ function backTo(stage) {
 function currentArcCh() { for (let k = 0; k < 9; k++) if ((S.story[k] || 0) < 48) return k; return 8; }
 function nextStory() { const k = currentArcCh(); return storyStage(Math.floor(k / 3), k % 3, Math.min(47, S.story[k] || 0)); }
 function nextStoryAfter(st) { if (st.i < 47) return storyStage(st.arc, st.ch, st.i + 1); const k = st.arc * 3 + st.ch + 1; return k < 9 ? storyStage(Math.floor(k / 3), k % 3, 0) : null; }
-function grantMsg(r) { return []; }
-function claimTangleEnd() { S.tangle = null; S.tangleBest = Math.max(S.tangleBest, 30); const g = []; save(); return g; }
+function grantMsg(r) { return grant(r); }
+function claimTangleEnd() { S.tangle = null; S.tangleBest = Math.max(S.tangleBest, 30); const g = grant({ plat: 1, buttons: 150, gem: 3 }); save(); return g; }
 function tipFor(stage) {
   const tr = new Set((stage.spawns || []).flatMap(s => ENEMIES[s.e].traits));
   if (tr.has('steel')) return 'Tip: Steel foes take 1 damage per hit. Critical hits (Jab, Needle, Velvet Rogue, Steel Spindle) cut through.';
